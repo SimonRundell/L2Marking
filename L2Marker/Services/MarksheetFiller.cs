@@ -11,11 +11,18 @@ namespace L2Marker.Services;
 /// </summary>
 public static class MarksheetFiller
 {
-    public static string CreateFilledMarksheet(UnitReference unit, StudentMarkingResult result, string assessorName)
+    /// <param name="outputFolder">Where to write the marksheet. Blank/null puts it next to the
+    /// student's own file (the original behaviour); otherwise every marksheet goes there instead,
+    /// created if it doesn't already exist.</param>
+    public static string CreateFilledMarksheet(UnitReference unit, StudentMarkingResult result, string assessorName, string? outputFolder = null)
     {
-        var studentDir = Path.GetDirectoryName(result.SourceFilePath) ?? ".";
+        var targetDir = string.IsNullOrWhiteSpace(outputFolder)
+            ? Path.GetDirectoryName(result.SourceFilePath) ?? "."
+            : outputFolder;
+        Directory.CreateDirectory(targetDir);
+
         var safeName = MakeSafeFileName(result.LearnerName);
-        var destPath = Path.Combine(studentDir, $"{safeName} Unit {unit.UnitNumber} FB.docx");
+        var destPath = Path.Combine(targetDir, $"{safeName} Unit {unit.UnitNumber} FB.docx");
         destPath = AvoidOverwrite(destPath);
 
         File.Copy(unit.TemplatePath, destPath, overwrite: false);

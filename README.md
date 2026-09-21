@@ -23,9 +23,10 @@ student's file.
 3. **Start Marking**. Each submission is sent to Claude and marked against every criterion for
    that unit as ACHIEVED / NOT ACHIEVED, with a short assessor comment per criterion plus overall
    feedback and further actions.
-4. A completed marksheet (`<Learner Name> Unit N FB.docx`) is written into the same folder as each
-   student's submission. Double-click a row (or **View Details**) to review the full breakdown
-   on screen before you sign anything off.
+4. A completed marksheet (`<Learner Name> Unit N FB.docx`) is written next to each student's
+   submission by default, or into one folder of your choice — set **Output folder** in Settings
+   (leave it blank to go back to the default). Double-click a row (or **View Details**) to review
+   the full breakdown on screen before you sign anything off.
 
 Learner and assessor signatures/dates are left blank on purpose — this tool drafts the marking,
 it doesn't sign it off. Review the generated marksheets before treating them as final.

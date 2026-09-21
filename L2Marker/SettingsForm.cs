@@ -9,6 +9,7 @@ public class SettingsForm : Form
     private readonly TextBox _apiKeyBox;
     private readonly ComboBox _modelBox;
     private readonly TextBox _referenceFolderBox;
+    private readonly TextBox _outputFolderBox;
     private readonly NumericUpDown _concurrencyBox;
     private readonly TextBox _assessorNameBox;
     private readonly Label _testResultLabel;
@@ -29,7 +30,7 @@ public class SettingsForm : Form
 
         Text = "Settings";
         Width = 640;
-        Height = 620;
+        Height = 680;
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -97,6 +98,33 @@ public class SettingsForm : Form
         };
         layout.Controls.Add(refHint, 1, row);
         layout.SetColumnSpan(refHint, 2);
+        row++;
+
+        layout.Controls.Add(new Label { Text = "Output folder:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _outputFolderBox = new TextBox { Dock = DockStyle.Fill, Text = current.OutputFolder };
+        layout.Controls.Add(_outputFolderBox, 1, row);
+        var outputBrowseButton = new Button { Text = "Browse...", Dock = DockStyle.Fill };
+        outputBrowseButton.Click += (_, _) =>
+        {
+            using var dlg = new FolderBrowserDialog { SelectedPath = string.IsNullOrWhiteSpace(_outputFolderBox.Text) ? current.ReferenceFolder : _outputFolderBox.Text };
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+                _outputFolderBox.Text = dlg.SelectedPath;
+        };
+        layout.Controls.Add(outputBrowseButton, 2, row);
+        row++;
+
+        var outputHint = new Label
+        {
+            Text = "Where generated marksheets are saved. Leave blank to save each one next to the student's own file (the default).",
+            AutoSize = true,
+            ForeColor = Color.DimGray,
+            MaximumSize = new Size(460, 0)
+        };
+        layout.Controls.Add(outputHint, 1, row);
+        layout.SetColumnSpan(outputHint, 2);
+        var clearOutputButton = new Button { Text = "Clear", Dock = DockStyle.Fill, Height = 24 };
+        clearOutputButton.Click += (_, _) => _outputFolderBox.Text = "";
+        layout.Controls.Add(clearOutputButton, 2, row);
         row++;
 
         layout.Controls.Add(new Label { Text = "Assessor name:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
@@ -209,6 +237,7 @@ public class SettingsForm : Form
             ApiKey = _apiKeyBox.Text.Trim(),
             Model = _modelBox.Text.Trim(),
             ReferenceFolder = _referenceFolderBox.Text.Trim(),
+            OutputFolder = _outputFolderBox.Text.Trim(),
             MaxConcurrency = (int)_concurrencyBox.Value,
             AssessorName = _assessorNameBox.Text.Trim(),
             MaxOutputTokens = 4096,

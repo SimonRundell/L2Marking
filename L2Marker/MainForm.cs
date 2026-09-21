@@ -347,7 +347,7 @@ public class MainForm : Form
             {
                 try
                 {
-                    var marksheetPath = MarksheetFiller.CreateFilledMarksheet(unitRef, result, _settings.AssessorName);
+                    var marksheetPath = MarksheetFiller.CreateFilledMarksheet(unitRef, result, _settings.AssessorName, _settings.OutputFolder);
                     result.GeneratedMarksheetPath = marksheetPath;
                     row.Status = "Done";
                     row.Result = $"{result.AchievedCount}/{result.TotalCount} - {(result.OverallAchieved ? "ACHIEVED" : "NOT YET ACHIEVED")}";
