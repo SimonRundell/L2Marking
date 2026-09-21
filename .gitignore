@@ -1,0 +1,11 @@
+# API Information
+marking-api-key.txt
+
+# Build output
+bin/
+obj/
+*.user
+.vs/
+
+# Contains the Claude API key entered via Settings
+settings.json
