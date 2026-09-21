@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <!-- Small-size variant: NCFE text is illegible below ~48px, so just the badge + tick -->
-  <polygon points="70,84 246,84 246,172 14,172 14,128 70,128" fill="#0D0D0D"/>
-  <path d="M58,180 L96,224 L248,12" fill="none" stroke="#FFFFFF" stroke-width="36"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M58,180 L96,224 L248,12" fill="none" stroke="#1E8E3E" stroke-width="24"
-        stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
