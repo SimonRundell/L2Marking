@@ -29,10 +29,9 @@ public class ClaudeMarkingService
         AppSettings settings,
         UnitReference unit,
         string studentFilePath,
+        string learnerName,
         CancellationToken ct = default)
     {
-        var learnerName = DocxTextExtractor.ExtractLearnerName(studentFilePath);
-
         var result = new StudentMarkingResult
         {
             SourceFilePath = studentFilePath,
@@ -113,7 +112,7 @@ public class ClaudeMarkingService
                             ["comment"] = new JsonObject
                             {
                                 ["type"] = "string",
-                                ["description"] = "One short sentence justifying the decision, in plain assessor language."
+                                ["description"] = "One short sentence justifying the decision, addressed to the learner as 'you' - never by name, never 'the learner'/'the student'."
                             }
                         },
                         ["required"] = new JsonArray("id", "achieved", "comment")
@@ -127,12 +126,12 @@ public class ClaudeMarkingService
                 ["overall_feedback"] = new JsonObject
                 {
                     ["type"] = "string",
-                    ["description"] = "2-4 sentence summary written directly to the learner, honest but encouraging."
+                    ["description"] = "2-4 sentence summary addressed to the learner as 'you', honest but encouraging."
                 },
                 ["further_actions"] = new JsonObject
                 {
                     ["type"] = "string",
-                    ["description"] = "What the learner must correct/resubmit. 'None - full pass.' if fully achieved."
+                    ["description"] = "What you (the learner) must correct/resubmit, addressed as 'you'. 'None - full pass.' if fully achieved."
                 }
             },
             ["required"] = new JsonArray("criteria", "overall_achieved", "overall_feedback", "further_actions")
@@ -195,10 +194,12 @@ public class ClaudeMarkingService
         sb.AppendLine("- The model answers below are a reference rubric for what correct understanding looks like. Learners " +
                        "are never expected to match their wording, length, or extra detail.");
         sb.AppendLine();
-        sb.AppendLine("For every criterion give a one-sentence comment justifying the decision. Then provide overall_feedback " +
-                       "(2-4 sentences, written directly to the learner by name where natural, honest but encouraging, no " +
-                       "corporate or robotic tone, avoid cliches), overall_achieved (true only if every criterion passed), " +
-                       "and further_actions (concretely what to fix/resubmit, or 'None - full pass.' if everything passed).");
+        sb.AppendLine("For every criterion give a one-sentence comment justifying the decision, addressed directly to the " +
+                       "learner as 'you' (e.g. 'You correctly explained...'), never by their name and never as 'the learner' " +
+                       "or 'the student'. Then provide overall_feedback in the same second-person voice (2-4 sentences, " +
+                       "honest but encouraging, no corporate or robotic tone, avoid cliches), overall_achieved (true only " +
+                       "if every criterion passed), and further_actions in the same voice (concretely what to fix/resubmit, " +
+                       "or 'None - full pass.' if everything passed).");
         sb.AppendLine();
         sb.AppendLine($"=== {unit.UnitTitle} - CRITERIA ===");
         foreach (var c in unit.Criteria)

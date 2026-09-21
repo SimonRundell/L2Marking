@@ -30,6 +30,7 @@ public class MainForm : Form
         Height = 680;
         StartPosition = FormStartPosition.CenterScreen;
         AllowDrop = true;
+        Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
         // ---- top toolbar ----
         var topPanel = new FlowLayoutPanel
@@ -69,19 +70,19 @@ public class MainForm : Form
             AutoGenerateColumns = false,
             AllowUserToAddRows = false,
             AllowUserToDeleteRows = false,
-            ReadOnly = true,
             RowHeadersVisible = false,
             SelectionMode = DataGridViewSelectionMode.FullRowSelect,
             MultiSelect = true,
             AllowDrop = true
         };
-        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "FileName", HeaderText = "File", DataPropertyName = "FileName", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "LearnerName", HeaderText = "Learner", DataPropertyName = "LearnerName", Width = 180 });
-        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Status", HeaderText = "Status", DataPropertyName = "Status", Width = 110 });
-        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Result", HeaderText = "Result", DataPropertyName = "Result", Width = 220 });
-        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Cost", HeaderText = "Cost", DataPropertyName = "Cost", Width = 70 });
+        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "FileName", HeaderText = "File", DataPropertyName = "FileName", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill, ReadOnly = true });
+        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "LearnerName", HeaderText = "Learner", DataPropertyName = "LearnerName", Width = 180, ReadOnly = false });
+        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Status", HeaderText = "Status", DataPropertyName = "Status", Width = 110, ReadOnly = true });
+        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Result", HeaderText = "Result", DataPropertyName = "Result", Width = 220, ReadOnly = true });
+        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Cost", HeaderText = "Cost", DataPropertyName = "Cost", Width = 70, ReadOnly = true });
         _grid.DataSource = _rows;
-        _grid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) ShowDetails(_rows[e.RowIndex]); };
+        _grid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0 && e.ColumnIndex >= 0 && _grid.Columns[e.ColumnIndex].Name != "LearnerName") ShowDetails(_rows[e.RowIndex]); };
+        _grid.CellEndEdit += Grid_CellEndEdit;
 
         _grid.DragEnter += Grid_DragEnter;
         _grid.DragDrop += Grid_DragDrop;
@@ -131,6 +132,19 @@ public class MainForm : Form
     {
         if (e.Data?.GetData(DataFormats.FileDrop) is not string[] paths) return;
         AddFiles(paths);
+    }
+
+    /// <summary>Learner names are auto-detected but often wrong (bad "Name" cell, odd filename), so
+    /// the Learner column is user-editable. An empty edit falls back to a fresh filename guess
+    /// rather than leaving the marksheet with a blank learner name.</summary>
+    private void Grid_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0 || _grid.Columns[e.ColumnIndex].Name != "LearnerName") return;
+
+        var row = _rows[e.RowIndex];
+        var trimmed = row.LearnerName.Trim();
+        row.LearnerName = string.IsNullOrWhiteSpace(trimmed) ? SafeGuessLearnerName(row.FilePath) : trimmed;
+        RefreshRow(row);
     }
 
     private void AddFilesDialog()
@@ -295,6 +309,7 @@ public class MainForm : Form
         _isRunning = true;
         _startButton.Enabled = false;
         _unitCombo.Enabled = false;
+        _grid.ReadOnly = true; // freeze Learner edits mid-run to avoid racing with in-flight marking calls
         _progressBar.Value = 0;
         _progressBar.Maximum = _rows.Count;
         _statusLabel.Text = $"Marking {_rows.Count} submission(s) against {unitRef.UnitTitle} ({unitRef.Criteria.Count} criteria)...";
@@ -323,6 +338,7 @@ public class MainForm : Form
         _isRunning = false;
         _startButton.Enabled = true;
         _unitCombo.Enabled = true;
+        _grid.ReadOnly = false;
     }
 
     private async Task MarkOneAsync(StudentRowViewModel row, UnitReference unitRef, SemaphoreSlim semaphore)
@@ -333,9 +349,8 @@ public class MainForm : Form
             row.Status = "Marking...";
             RefreshRow(row);
 
-            var result = await _markingService.MarkStudentAsync(_settings, unitRef, row.FilePath);
+            var result = await _markingService.MarkStudentAsync(_settings, unitRef, row.FilePath, row.LearnerName);
             row.MarkingResult = result;
-            row.LearnerName = result.LearnerName;
             RecordSpend(result);
 
             if (result.Error is not null)

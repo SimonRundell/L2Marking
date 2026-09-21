@@ -19,10 +19,13 @@ student's file.
 ## Using it
 
 1. Pick the **Unit** (1–5) from the dropdown.
-2. **Add Files...** or drag-and-drop the student submissions (20–25 at a time is fine).
+2. **Add Files...** or drag-and-drop the student submissions (20–25 at a time is fine). The
+   **Learner** column is editable — click into a row and fix the name if it was pulled wrong from
+   the file; whatever's in that column when you start marking is what's used in the prompt, the
+   filled-in marksheet, and the output filename.
 3. **Start Marking**. Each submission is sent to Claude and marked against every criterion for
    that unit as ACHIEVED / NOT ACHIEVED, with a short assessor comment per criterion plus overall
-   feedback and further actions.
+   feedback and further actions, all written second-person ("you...") direct to the learner.
 4. A completed marksheet (`<Learner Name> Unit N FB.docx`) is written next to each student's
    submission by default, or into one folder of your choice — set **Output folder** in Settings
    (leave it blank to go back to the default). Double-click a row (or **View Details**) to review
@@ -41,6 +44,8 @@ For each student, it extracts the submission's text (paragraphs and tables, in r
 screenshots/images embedded in later units are not read) and sends it to Claude along with the
 unit's rubric, asking it to return a strict achieved/not-achieved decision per criterion via a
 forced tool call (so the response is always clean structured data, not free text to parse).
+Feedback — the per-criterion comments, the overall summary, and further actions — is written
+directly to the learner as "you", never by name or as "the learner"/"the student".
 
 ## Cost efficiency
 
@@ -76,7 +81,8 @@ actual Anthropic billing.
 
 - Images/screenshots inside a submission (e.g. code screenshots in later units) are not read —
   only text and tables. If a unit relies heavily on screenshots, review those criteria manually.
-- Name detection looks for a "Name" table cell first, falling back to the filename. Check the
-  Learner column after adding files and fix anything odd before marking.
+- Name detection looks for a "Name" table cell first, falling back to the filename, and isn't
+  always right. The Learner column is editable — check it after adding files and fix anything odd
+  before marking (the grid locks once a run starts, so edit before clicking Start Marking).
 - This is an assistive tool, not an auto-signing system — always spot-check the AI's marking,
   especially borderline achieved/not-achieved calls, before treating a unit as signed off.
