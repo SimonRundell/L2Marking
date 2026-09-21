@@ -71,7 +71,7 @@ public class ClaudeMarkingService
 
         try
         {
-            PopulateFromToolResponse(result, unit, responseJson!);
+            PopulateFromToolResponse(result, unit, responseJson!, settings);
         }
         catch (Exception ex)
         {
@@ -257,8 +257,20 @@ public class ClaudeMarkingService
         throw lastError ?? new Exception("Unknown error calling the Claude API.");
     }
 
-    private static void PopulateFromToolResponse(StudentMarkingResult result, UnitReference unit, JsonNode response)
+    private static void PopulateFromToolResponse(StudentMarkingResult result, UnitReference unit, JsonNode response, AppSettings settings)
     {
+        var usageNode = response["usage"];
+        if (usageNode is not null)
+        {
+            var usage = new ApiUsage(
+                InputTokens: usageNode["input_tokens"]?.GetValue<int>() ?? 0,
+                OutputTokens: usageNode["output_tokens"]?.GetValue<int>() ?? 0,
+                CacheCreationInputTokens: usageNode["cache_creation_input_tokens"]?.GetValue<int>() ?? 0,
+                CacheReadInputTokens: usageNode["cache_read_input_tokens"]?.GetValue<int>() ?? 0);
+            result.Usage = usage;
+            result.EstimatedCostUsd = CostCalculator.CalculateCost(usage, settings);
+        }
+
         var contentArray = response["content"]?.AsArray()
             ?? throw new Exception("Response had no content block.");
 

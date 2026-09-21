@@ -17,7 +17,11 @@ public class MainForm : Form
     private readonly Button _startButton;
     private readonly ProgressBar _progressBar;
     private readonly Label _statusLabel;
+    private readonly Label _spendLabel;
     private bool _isRunning;
+    private decimal _runCostSoFar;
+    private bool _warnedApproachingBudget;
+    private bool _warnedOverBudget;
 
     public MainForm()
     {
@@ -75,6 +79,7 @@ public class MainForm : Form
         _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "LearnerName", HeaderText = "Learner", DataPropertyName = "LearnerName", Width = 180 });
         _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Status", HeaderText = "Status", DataPropertyName = "Status", Width = 110 });
         _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Result", HeaderText = "Result", DataPropertyName = "Result", Width = 220 });
+        _grid.Columns.Add(new DataGridViewTextBoxColumn { Name = "Cost", HeaderText = "Cost", DataPropertyName = "Cost", Width = 70 });
         _grid.DataSource = _rows;
         _grid.CellDoubleClick += (_, e) => { if (e.RowIndex >= 0) ShowDetails(_rows[e.RowIndex]); };
 
@@ -107,6 +112,10 @@ public class MainForm : Form
 
         _statusLabel = new Label { Text = "Ready.", Location = new Point(444, 12), AutoSize = true };
         bottomPanel.Controls.Add(_statusLabel);
+
+        _spendLabel = new Label { Location = new Point(444, 32), AutoSize = true, ForeColor = Color.DimGray };
+        bottomPanel.Controls.Add(_spendLabel);
+        UpdateSpendLabel();
 
         Controls.Add(_grid);
         Controls.Add(bottomPanel);
@@ -173,11 +182,57 @@ public class MainForm : Form
     private void OpenSettings()
     {
         using var form = new SettingsForm(_settings);
-        if (form.ShowDialog(this) == DialogResult.OK)
+        var result = form.ShowDialog(this);
+
+        if (result == DialogResult.OK)
         {
             _settings = form.Settings;
             SettingsService.Save(_settings);
             _unitCache.Clear();
+        }
+
+        // Refresh regardless of OK/Cancel - "Reset Spend" inside the dialog saves immediately,
+        // independent of Save/Cancel, so the label can be stale even after a cancelled dialog.
+        UpdateSpendLabel();
+    }
+
+    private void UpdateSpendLabel()
+    {
+        _spendLabel.Text = _settings.BudgetUsd is { } budget && budget > 0
+            ? $"Claude spend: ${_settings.SpentUsd:0.00} of ${budget:0.00} budget"
+            : $"Claude spend: ${_settings.SpentUsd:0.00} (lifetime)";
+    }
+
+    /// <summary>
+    /// Turns one call's billed usage into a dollar cost, adds it to the persisted lifetime total
+    /// and this run's running total, and warns - at most once per threshold per run - as a set
+    /// budget is approached or passed. Never blocks a run; this is visibility, not a cap.
+    /// </summary>
+    private void RecordSpend(StudentMarkingResult result)
+    {
+        if (result.Usage is null) return; // no response was ever billed (e.g. request never reached the API)
+
+        _settings.SpentUsd += result.EstimatedCostUsd;
+        _runCostSoFar += result.EstimatedCostUsd;
+        SettingsService.Save(_settings);
+        UpdateSpendLabel();
+
+        var budget = _settings.BudgetUsd;
+        if (budget is not { } b || b <= 0) return;
+
+        if (_settings.SpentUsd >= b && !_warnedOverBudget)
+        {
+            _warnedOverBudget = true;
+            MessageBox.Show(this,
+                $"You've now spent ${_settings.SpentUsd:0.00} on Claude, over your ${b:0.00} budget. Open Settings to review or raise it.",
+                "Budget exceeded", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+        else if (_settings.SpentUsd >= b * 0.8m && !_warnedApproachingBudget)
+        {
+            _warnedApproachingBudget = true;
+            MessageBox.Show(this,
+                $"You've spent ${_settings.SpentUsd:0.00} of your ${b:0.00} Claude budget - getting close.",
+                "Approaching budget", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 
@@ -243,6 +298,9 @@ public class MainForm : Form
         _progressBar.Value = 0;
         _progressBar.Maximum = _rows.Count;
         _statusLabel.Text = $"Marking {_rows.Count} submission(s) against {unitRef.UnitTitle} ({unitRef.Criteria.Count} criteria)...";
+        _runCostSoFar = 0;
+        _warnedApproachingBudget = false;
+        _warnedOverBudget = false;
 
         foreach (var row in _rows)
         {
@@ -258,7 +316,9 @@ public class MainForm : Form
 
         var achievedCount = _rows.Count(r => r.MarkingResult is { Error: null } m && m.OverallAchieved);
         var errorCount = _rows.Count(r => r.MarkingResult?.Error is not null || r.Status == "Error");
-        _statusLabel.Text = $"Done. {achievedCount}/{_rows.Count} fully achieved" + (errorCount > 0 ? $", {errorCount} error(s)." : ".");
+        _statusLabel.Text = $"Done. {achievedCount}/{_rows.Count} fully achieved" +
+                             (errorCount > 0 ? $", {errorCount} error(s)." : ".") +
+                             $" This run cost approx ${_runCostSoFar:0.0000}.";
 
         _isRunning = false;
         _startButton.Enabled = true;
@@ -276,6 +336,7 @@ public class MainForm : Form
             var result = await _markingService.MarkStudentAsync(_settings, unitRef, row.FilePath);
             row.MarkingResult = result;
             row.LearnerName = result.LearnerName;
+            RecordSpend(result);
 
             if (result.Error is not null)
             {

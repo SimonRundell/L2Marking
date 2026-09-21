@@ -53,6 +53,24 @@ forced tool call (so the response is always clean structured data, not free text
 - **One call per student**: keeps failures isolated (one bad file doesn't affect the rest of the
   batch) and keeps each request small.
 
+## Cost tracking
+
+Anthropic's API has no "check my balance" endpoint, so spend is estimated locally: every response
+reports exactly how many input/output/cache tokens it billed for, and Settings lets you enter the
+$/million-token rates for your chosen model (a **Use standard pricing** button fills in the known
+rates for Haiku 4.5 and Sonnet 5). From that:
+
+- The main window's status bar shows a running lifetime total (persisted in `settings.json`) and,
+  after each batch, roughly what that run cost.
+- Each row in the grid, and the **View Details** dialog, show that student's own cost and raw
+  token counts.
+- An optional **Budget (USD)** in Settings warns you once as you pass 80% of it and once more if
+  you go over — visibility, not a hard cap; runs are never blocked.
+- **Reset Spend** in Settings zeroes the lifetime total (e.g. at the start of a new term).
+
+Treat the figure as a guide, not the invoice — it's a local estimate, not a query against your
+actual Anthropic billing.
+
 ## Known limitations
 
 - Images/screenshots inside a submission (e.g. code screenshots in later units) are not read —

@@ -33,6 +33,16 @@ public class DetailsForm : Form
         top.Controls.Add(new Label { Text = "Further actions:", AutoSize = true, Font = new Font(Font, FontStyle.Bold) }, 0, 3);
         top.Controls.Add(new Label { Text = result.FurtherActions, AutoSize = true, MaximumSize = new Size(700, 0) }, 1, 3);
 
+        top.Controls.Add(new Label { Text = "Cost:", AutoSize = true, Font = new Font(Font, FontStyle.Bold) }, 0, 4);
+        top.Controls.Add(new Label
+        {
+            Text = result.Usage is { } u
+                ? $"${result.EstimatedCostUsd:0.0000}  ({u.InputTokens} in / {u.OutputTokens} out / {u.CacheCreationInputTokens} cache-write / {u.CacheReadInputTokens} cache-read)"
+                : "(no usage recorded)",
+            AutoSize = true,
+            ForeColor = Color.DimGray
+        }, 1, 4);
+
         var grid = new DataGridView
         {
             Dock = DockStyle.Fill,

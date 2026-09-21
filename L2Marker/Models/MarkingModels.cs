@@ -23,6 +23,12 @@ public class StudentMarkingResult
 
     public string? GeneratedMarksheetPath { get; set; }
 
+    /// <summary>Token usage this call was billed for, or null if the call never got a response (error before/without usage).</summary>
+    public ApiUsage? Usage { get; set; }
+
+    /// <summary>Local cost estimate for this one call, priced per the settings in effect when it was marked.</summary>
+    public decimal EstimatedCostUsd { get; set; }
+
     public int AchievedCount => Criteria.Count(c => c.Achieved);
     public int TotalCount => Criteria.Count;
 }

@@ -9,4 +9,5 @@ public class StudentRowViewModel
     public string Status { get; set; } = "Pending";
     public string Result { get; set; } = "";
     public StudentMarkingResult? MarkingResult { get; set; }
+    public string Cost => MarkingResult?.Usage is not null ? $"${MarkingResult.EstimatedCostUsd:0.0000}" : "";
 }

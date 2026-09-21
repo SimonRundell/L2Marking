@@ -12,16 +12,24 @@ public class SettingsForm : Form
     private readonly NumericUpDown _concurrencyBox;
     private readonly TextBox _assessorNameBox;
     private readonly Label _testResultLabel;
+    private readonly NumericUpDown _inputPriceBox;
+    private readonly NumericUpDown _outputPriceBox;
+    private readonly NumericUpDown _cacheWritePriceBox;
+    private readonly NumericUpDown _cacheReadPriceBox;
+    private readonly TextBox _budgetBox;
+    private readonly Label _spentLabel;
+    private readonly AppSettings _current;
 
     public AppSettings Settings { get; private set; }
 
     public SettingsForm(AppSettings current)
     {
         Settings = current;
+        _current = current;
 
         Text = "Settings";
         Width = 640;
-        Height = 420;
+        Height = 620;
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -101,6 +109,75 @@ public class SettingsForm : Form
         layout.Controls.Add(_concurrencyBox, 1, row);
         row++;
 
+        var separator = new Label
+        {
+            Text = "Cost tracking",
+            AutoSize = true,
+            Font = new Font(Font, FontStyle.Bold),
+            Margin = new Padding(0, 12, 0, 4)
+        };
+        layout.Controls.Add(separator, 0, row);
+        layout.SetColumnSpan(separator, 3);
+        row++;
+
+        var costHint = new Label
+        {
+            Text = "Anthropic has no \"check my balance\" API, so spend is estimated locally from each call's " +
+                   "reported token usage at the $/million-token rates below. Treat it as a guide, not the invoice.",
+            AutoSize = true,
+            ForeColor = Color.DimGray,
+            MaximumSize = new Size(460, 0)
+        };
+        layout.Controls.Add(costHint, 1, row);
+        layout.SetColumnSpan(costHint, 2);
+        row++;
+
+        NumericUpDown MakePriceBox(decimal value) => new()
+        {
+            Dock = DockStyle.Fill,
+            Minimum = 0,
+            Maximum = 1000,
+            DecimalPlaces = 3,
+            Increment = 0.01m,
+            Value = value
+        };
+
+        layout.Controls.Add(new Label { Text = "Input $/million tokens:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _inputPriceBox = MakePriceBox(current.InputPricePerMillionTokens);
+        layout.Controls.Add(_inputPriceBox, 1, row);
+        var presetButton = new Button { Text = "Use standard pricing", Dock = DockStyle.Fill };
+        presetButton.Click += (_, _) => ApplyPricingPreset();
+        layout.Controls.Add(presetButton, 2, row);
+        row++;
+
+        layout.Controls.Add(new Label { Text = "Output $/million tokens:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _outputPriceBox = MakePriceBox(current.OutputPricePerMillionTokens);
+        layout.Controls.Add(_outputPriceBox, 1, row);
+        row++;
+
+        layout.Controls.Add(new Label { Text = "Cache write $/million:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _cacheWritePriceBox = MakePriceBox(current.CacheWritePricePerMillionTokens);
+        layout.Controls.Add(_cacheWritePriceBox, 1, row);
+        row++;
+
+        layout.Controls.Add(new Label { Text = "Cache read $/million:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _cacheReadPriceBox = MakePriceBox(current.CacheReadPricePerMillionTokens);
+        layout.Controls.Add(_cacheReadPriceBox, 1, row);
+        row++;
+
+        layout.Controls.Add(new Label { Text = "Budget (USD, optional):", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _budgetBox = new TextBox { Dock = DockStyle.Fill, Text = current.BudgetUsd?.ToString("0.00") ?? "" };
+        layout.Controls.Add(_budgetBox, 1, row);
+        row++;
+
+        layout.Controls.Add(new Label { Text = "Spent so far:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
+        _spentLabel = new Label { Dock = DockStyle.Fill, Text = $"${current.SpentUsd:0.00}", AutoSize = false, Height = 20 };
+        layout.Controls.Add(_spentLabel, 1, row);
+        var resetButton = new Button { Text = "Reset Spend", Dock = DockStyle.Fill };
+        resetButton.Click += (_, _) => ResetSpend();
+        layout.Controls.Add(resetButton, 2, row);
+        row++;
+
         var buttonPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Bottom,
@@ -123,6 +200,10 @@ public class SettingsForm : Form
 
     private void SaveIntoSettings()
     {
+        decimal? budget = null;
+        if (!string.IsNullOrWhiteSpace(_budgetBox.Text) && decimal.TryParse(_budgetBox.Text, out var parsedBudget))
+            budget = parsedBudget;
+
         Settings = new AppSettings
         {
             ApiKey = _apiKeyBox.Text.Trim(),
@@ -130,8 +211,43 @@ public class SettingsForm : Form
             ReferenceFolder = _referenceFolderBox.Text.Trim(),
             MaxConcurrency = (int)_concurrencyBox.Value,
             AssessorName = _assessorNameBox.Text.Trim(),
-            MaxOutputTokens = 4096
+            MaxOutputTokens = 4096,
+            InputPricePerMillionTokens = _inputPriceBox.Value,
+            OutputPricePerMillionTokens = _outputPriceBox.Value,
+            CacheWritePricePerMillionTokens = _cacheWritePriceBox.Value,
+            CacheReadPricePerMillionTokens = _cacheReadPriceBox.Value,
+            BudgetUsd = budget,
+            SpentUsd = _current.SpentUsd
         };
+    }
+
+    private void ApplyPricingPreset()
+    {
+        if (ClaudePricingPresets.TryGet(_modelBox.Text.Trim(), out var preset))
+        {
+            _inputPriceBox.Value = preset.Input;
+            _outputPriceBox.Value = preset.Output;
+            _cacheWritePriceBox.Value = preset.CacheWrite;
+            _cacheReadPriceBox.Value = preset.CacheRead;
+        }
+        else
+        {
+            MessageBox.Show(this,
+                $"No standard pricing is known for '{_modelBox.Text.Trim()}'. Enter it manually from Anthropic's pricing page.",
+                "No preset available", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+    }
+
+    private void ResetSpend()
+    {
+        var confirm = MessageBox.Show(this,
+            "Reset the recorded Claude spend total back to $0.00? This can't be undone.",
+            "Reset spend", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+        if (confirm != DialogResult.Yes) return;
+
+        _current.SpentUsd = 0;
+        SettingsService.Save(_current);
+        _spentLabel.Text = "$0.00";
     }
 
     private async Task TestApiKeyAsync()
