@@ -8,7 +8,7 @@ public class AppSettings
     public string Model { get; set; } = "claude-haiku-4-5-20251001";
 
     public string ReferenceFolder { get; set; } =
-        @"C:\Users\SPR\OneDrive - Exeter College\";
+        @"C:\Users\SPR\OneDrive - Exeter College\Planning\L2 Coding\Workbooks - All Units";
 
     /// <summary>Where generated marksheets are written. Blank (the default) means "next to each
     /// student's own file" - set this to send every generated marksheet to one folder instead.</summary>
