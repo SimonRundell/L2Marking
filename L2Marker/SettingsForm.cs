@@ -128,8 +128,11 @@ public class SettingsForm : Form
             ForeColor = Color.DimGray,
             MaximumSize = new Size(460, 0)
         };
+        // Not spanned to column 2, unlike the other hint labels - this row's column 2 is already
+        // occupied by clearOutputButton, and spanning into an occupied cell is what caused the
+        // whole grid below this point to cascade out of place (TableLayoutPanel silently relocates
+        // the "losing" control to the next free cell instead of erroring).
         layout.Controls.Add(outputHint, 1, row);
-        layout.SetColumnSpan(outputHint, 2);
         var clearOutputButton = new Button { Text = "Clear", Dock = DockStyle.Fill, Height = 24 };
         var clearOutputTip = new ToolTip();
         clearOutputTip.SetToolTip(clearOutputButton,
