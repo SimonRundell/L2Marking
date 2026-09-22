@@ -131,6 +131,9 @@ public class SettingsForm : Form
         layout.Controls.Add(outputHint, 1, row);
         layout.SetColumnSpan(outputHint, 2);
         var clearOutputButton = new Button { Text = "Clear", Dock = DockStyle.Fill, Height = 24 };
+        var clearOutputTip = new ToolTip();
+        clearOutputTip.SetToolTip(clearOutputButton,
+            "Clears the output folder above, back to the default (save each marksheet next to the student's own file). Doesn't move or delete anything already saved.");
         clearOutputButton.Click += (_, _) => _outputFolderBox.Text = "";
         layout.Controls.Add(clearOutputButton, 2, row);
         row++;
@@ -138,10 +141,11 @@ public class SettingsForm : Form
         layout.Controls.Add(new Label { Text = "Assessor name:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
         _assessorNameBox = new TextBox { Dock = DockStyle.Fill, Text = current.AssessorName };
         layout.Controls.Add(_assessorNameBox, 1, row);
+        layout.SetColumnSpan(_assessorNameBox, 2);
         row++;
 
         layout.Controls.Add(new Label { Text = "Max concurrent calls:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, row);
-        _concurrencyBox = new NumericUpDown { Dock = DockStyle.Fill, Minimum = 1, Maximum = 10, Value = Math.Clamp(current.MaxConcurrency, 1, 10) };
+        _concurrencyBox = new NumericUpDown { Anchor = AnchorStyles.Left, Width = 60, Minimum = 1, Maximum = 10, Value = Math.Clamp(current.MaxConcurrency, 1, 10) };
         layout.Controls.Add(_concurrencyBox, 1, row);
         row++;
 
