@@ -218,11 +218,11 @@ public class SettingsForm : Form
         {
             Dock = DockStyle.Bottom,
             FlowDirection = FlowDirection.RightToLeft,
-            Height = 50,
+            Height = 64,
             Padding = new Padding(16)
         };
-        var okButton = new Button { Text = "Save", DialogResult = DialogResult.OK, Width = 90 };
-        var cancelButton = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 90 };
+        var okButton = new Button { Text = "Save", DialogResult = DialogResult.OK, Width = 90, Height = 32 };
+        var cancelButton = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 90, Height = 32 };
         okButton.Click += (_, _) => SaveIntoSettings();
         buttonPanel.Controls.Add(okButton);
         buttonPanel.Controls.Add(cancelButton);

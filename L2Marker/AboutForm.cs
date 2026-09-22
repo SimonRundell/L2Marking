@@ -79,12 +79,12 @@ public class AboutForm : Form
         };
         layout.Controls.Add(licenceLink, 1, 4);
 
-        var closeButton = new Button { Text = "Close", DialogResult = DialogResult.OK, Width = 90, Height = 30 };
+        var closeButton = new Button { Text = "Close", DialogResult = DialogResult.OK, Width = 90, Height = 32 };
         var buttonPanel = new FlowLayoutPanel
         {
             Dock = DockStyle.Bottom,
             FlowDirection = FlowDirection.RightToLeft,
-            Height = 50,
+            Height = 64,
             Padding = new Padding(16)
         };
         buttonPanel.Controls.Add(closeButton);

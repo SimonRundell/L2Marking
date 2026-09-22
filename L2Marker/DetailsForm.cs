@@ -71,12 +71,20 @@ public class DetailsForm : Form
             grid.Rows[rowIndex].DefaultCellStyle.ForeColor = c.Achieved ? Color.DarkGreen : Color.DarkRed;
         }
 
-        var closeButton = new Button { Text = "Close", Dock = DockStyle.Bottom, DialogResult = DialogResult.OK, Height = 36 };
+        var closeButton = new Button { Text = "Close", DialogResult = DialogResult.OK, Width = 90, Height = 32 };
+        var buttonPanel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Bottom,
+            FlowDirection = FlowDirection.RightToLeft,
+            Height = 64,
+            Padding = new Padding(16)
+        };
+        buttonPanel.Controls.Add(closeButton);
         CancelButton = closeButton;
         AcceptButton = closeButton;
 
         Controls.Add(grid);
-        Controls.Add(closeButton);
+        Controls.Add(buttonPanel);
         Controls.Add(top);
     }
 }
