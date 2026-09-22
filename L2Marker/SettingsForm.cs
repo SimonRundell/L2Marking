@@ -30,18 +30,26 @@ public class SettingsForm : Form
 
         Text = "Settings";
         Width = 640;
-        Height = 680;
+        Height = 700;
+        MinimumSize = new Size(640, 400);
         StartPosition = FormStartPosition.CenterParent;
-        FormBorderStyle = FormBorderStyle.FixedDialog;
+        FormBorderStyle = FormBorderStyle.Sizable;
         MaximizeBox = false;
         MinimizeBox = false;
 
+        // The row count here has grown as features were added (cost tracking, output folder, ...)
+        // and will likely grow again - scroll instead of Dock=Fill, so a dialog shorter than its
+        // content gets a scrollbar rather than every row being squeezed to fit (which is what was
+        // happening: fields overlapping their neighbours).
+        var scrollPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
+
         var layout = new TableLayoutPanel
         {
-            Dock = DockStyle.Fill,
+            Dock = DockStyle.Top,
             ColumnCount = 3,
             Padding = new Padding(16),
-            AutoSize = true
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -222,7 +230,8 @@ public class SettingsForm : Form
         AcceptButton = okButton;
         CancelButton = cancelButton;
 
-        Controls.Add(layout);
+        scrollPanel.Controls.Add(layout);
+        Controls.Add(scrollPanel);
         Controls.Add(buttonPanel);
     }
 

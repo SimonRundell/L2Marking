@@ -8,7 +8,7 @@ student's file.
 ## Setup
 
 1. Open `L2Marker.sln` in Visual Studio (or run `dotnet build` from this folder) and run the app.
-2. Click **Settings...** and paste in your Claude API key. Use **Test** to confirm it works.
+2. **File → Settings...** and paste in your Claude API key. Use **Test** to confirm it works.
 3. Check the **Reference folder** points at your `Workbooks - All Units` folder — the one
    containing `NCFE_L2_UnitN_ModelAnswers.docx` and `Unit N Assessor Feedback to Learner.docx`
    for each unit. It defaults to the folder already in use for this qualification.
@@ -86,3 +86,8 @@ actual Anthropic billing.
   before marking (the grid locks once a run starts, so edit before clicking Start Marking).
 - This is an assistive tool, not an auto-signing system — always spot-check the AI's marking,
   especially borderline achieved/not-achieved calls, before treating a unit as signed off.
+
+## License
+
+Released under [Creative Commons BY-NC-SA 4.0](LICENSE.md) — see **Help → About L2 Marker** in the
+app, or [LICENSE.md](LICENSE.md), for the summary and link to the full text.

@@ -32,6 +32,27 @@ public class MainForm : Form
         AllowDrop = true;
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
+        // ---- menu bar ----
+        var menuStrip = new MenuStrip();
+
+        var fileMenu = new ToolStripMenuItem("&File");
+        var settingsMenuItem = new ToolStripMenuItem("&Settings...");
+        settingsMenuItem.Click += (_, _) => OpenSettings();
+        var exitMenuItem = new ToolStripMenuItem("E&xit");
+        exitMenuItem.Click += (_, _) => Close();
+        fileMenu.DropDownItems.Add(settingsMenuItem);
+        fileMenu.DropDownItems.Add(new ToolStripSeparator());
+        fileMenu.DropDownItems.Add(exitMenuItem);
+
+        var helpMenu = new ToolStripMenuItem("&Help");
+        var aboutMenuItem = new ToolStripMenuItem("&About L2 Marker...");
+        aboutMenuItem.Click += (_, _) => ShowAbout();
+        helpMenu.DropDownItems.Add(aboutMenuItem);
+
+        menuStrip.Items.Add(fileMenu);
+        menuStrip.Items.Add(helpMenu);
+        MainMenuStrip = menuStrip;
+
         // ---- top toolbar ----
         var topPanel = new FlowLayoutPanel
         {
@@ -46,10 +67,6 @@ public class MainForm : Form
             _unitCombo.Items.Add($"Unit {i}");
         _unitCombo.SelectedIndex = 1; // Unit 2 default
         topPanel.Controls.Add(_unitCombo);
-
-        var settingsButton = new Button { Text = "Settings...", AutoSize = true, Margin = new Padding(16, 0, 0, 0) };
-        settingsButton.Click += (_, _) => OpenSettings();
-        topPanel.Controls.Add(settingsButton);
 
         var addFilesButton = new Button { Text = "Add Files...", AutoSize = true, Margin = new Padding(16, 0, 0, 0) };
         addFilesButton.Click += (_, _) => AddFilesDialog();
@@ -121,6 +138,13 @@ public class MainForm : Form
         Controls.Add(_grid);
         Controls.Add(bottomPanel);
         Controls.Add(topPanel);
+        Controls.Add(menuStrip);
+    }
+
+    private void ShowAbout()
+    {
+        using var about = new AboutForm(Icon);
+        about.ShowDialog(this);
     }
 
     private void Grid_DragEnter(object? sender, DragEventArgs e)
