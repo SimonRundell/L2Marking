@@ -160,8 +160,6 @@ public class SettingsForm : Form
             Margin = new Padding(0, 12, 0, 4)
         };
         layout.Controls.Add(separator, 0, row);
-        layout.SetColumnSpan(separator, 3);
-        row++;
 
         var costHint = new Label
         {
