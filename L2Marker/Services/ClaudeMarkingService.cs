@@ -141,7 +141,6 @@ public class ClaudeMarkingService
         {
             ["model"] = settings.Model,
             ["max_tokens"] = settings.MaxOutputTokens,
-            ["temperature"] = 0,
             ["system"] = new JsonArray
             {
                 new JsonObject
