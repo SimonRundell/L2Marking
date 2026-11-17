@@ -65,7 +65,7 @@ public class MainForm : Form
         _unitCombo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 260 };
         for (int i = 1; i <= 5; i++)
             _unitCombo.Items.Add($"Unit {i}");
-        _unitCombo.SelectedIndex = 1; // Unit 2 default
+        _unitCombo.SelectedIndex = 0; // Unit 1 default
         topPanel.Controls.Add(_unitCombo);
 
         var addFilesButton = new Button { Text = "Add Files...", AutoSize = true, Margin = new Padding(16, 0, 0, 0) };
